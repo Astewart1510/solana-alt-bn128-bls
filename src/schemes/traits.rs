@@ -2,11 +2,11 @@ use crate::{errors::BLSError, g1_point::G1Point};
 
 pub trait HashToCurve {
     /// # Try Hash To Curve
-    /// 
+    ///
     /// This trait implements a `try_hash_to_curve` function used to implement signing and verification
-    /// of BLS signatures for our custom AltBN128 signature scheme and attempts to return a valid point 
+    /// of BLS signatures for our custom AltBN128 signature scheme and attempts to return a valid point
     /// in G1 representing our hashed value scalar.
-    /// 
+    ///
     /// Consider using this function to implement:
     /// - Hashing algorithm
     /// - Hash scalar normalization

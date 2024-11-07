@@ -101,7 +101,7 @@ impl TryFrom<G1CompressedPoint> for G1Point {
 
 #[cfg(test)]
 mod tests {
-    use crate::{g1_point::G1CompressedPoint, privkey::PrivKey, G2Point, Sha256Normalized};
+    use crate::{g1_point::G1CompressedPoint, privkey::PrivKey, G2CompressedPoint, G2Point, Sha256Normalized};
 
     use super::G1Point;
 
@@ -148,3 +148,4 @@ mod tests {
         pubkey_agg.verify_signature::<Sha256Normalized, &[u8]>(sig_agg.try_into().unwrap(), &msg).unwrap(); 
     }
 }
+
