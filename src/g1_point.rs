@@ -125,7 +125,6 @@ mod tests {
 
     #[test]
     fn perps_aggregation() {
-        let ticker = b"BTC";
         let msg = [
             &50_000u64.to_le_bytes()[..],
             b"BTCUSD<",
