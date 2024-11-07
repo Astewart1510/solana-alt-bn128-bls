@@ -3,6 +3,8 @@ pub struct G2Point(pub [u8;128]);
 #[derive(Clone)]
 pub struct G2CompressedPoint(pub [u8;64]);
 
+use core::ops::Add;
+
 #[cfg(not(target_os = "solana"))]
 use ark_bn254::{Fr, G2Affine};
 #[cfg(not(target_os = "solana"))]
@@ -44,6 +46,25 @@ impl G2Point {
         } else {
             Err(BLSError::AltBN128PairingError)
         }
+    }
+}
+
+#[cfg(not(target_os="solana"))]
+impl Add for G2Point {
+    type Output = G2Point;
+
+    fn add(self, rhs: Self) -> G2Point {
+        let mut s0 = G2CompressedPoint::try_from(self).unwrap().0;
+        let mut s1 = G2CompressedPoint::try_from(rhs).unwrap().0;
+        s0.reverse(); 
+        s1.reverse(); 
+        let g2_agg = G2Affine::deserialize_compressed(&s0[..]).unwrap() + G2Affine::deserialize_compressed(&s1[..]).unwrap();
+        let mut g2_agg_bytes = [0u8;64];
+        g2_agg.serialize_compressed(&mut &mut g2_agg_bytes[..]).unwrap();
+
+        g2_agg_bytes.reverse();
+
+        G2Point::try_from(G2CompressedPoint(g2_agg_bytes)).unwrap()
     }
 }
 

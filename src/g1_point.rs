@@ -1,4 +1,7 @@
-use solana_bn254::{compression::prelude::{alt_bn128_g1_compress, alt_bn128_g1_decompress}, prelude::alt_bn128_multiplication};
+use core::ops::Add;
+use std::process::Output;
+
+use solana_bn254::{compression::prelude::{alt_bn128_g1_compress, alt_bn128_g1_decompress, G1}, prelude::{alt_bn128_addition, alt_bn128_multiplication}};
 
 use crate::{BLSError,PrivKey};
 
@@ -7,6 +10,25 @@ pub struct G1Point(pub [u8;64]);
 
 #[derive(Clone)]
 pub struct G1CompressedPoint(pub [u8;32]);
+
+impl Add for G1Point {
+    type Output = G1Point;
+
+    fn add(self, rhs: Self) -> G1Point {
+        let mut combined_input = [0u8; 128]; // Create a buffer large enough for both 64-byte arrays.
+
+        unsafe {
+            *(combined_input.as_mut_ptr() as *mut [u8;64]) = self.0;
+            *(combined_input.as_mut_ptr().add(64) as *mut [u8;64]) = rhs.0;
+        }
+
+        // Call the addition function with the combined input.
+        let result = alt_bn128_addition(&combined_input).unwrap();
+
+        // Directly create a new G1Point from the result without intermediate allocations.
+        G1Point(result.try_into().unwrap())
+    }
+}
 
 impl TryFrom<PrivKey> for G1CompressedPoint {
     type Error = BLSError;
@@ -79,7 +101,7 @@ impl TryFrom<G1CompressedPoint> for G1Point {
 
 #[cfg(test)]
 mod tests {
-    use crate::{g1_point::G1CompressedPoint, privkey::PrivKey};
+    use crate::{g1_point::G1CompressedPoint, privkey::PrivKey, G2Point, Sha256Normalized};
 
     use super::G1Point;
 
@@ -99,5 +121,26 @@ mod tests {
         let pubkey = G1Point::try_from(privkey).unwrap();
 
         assert_eq!(hex::encode(pubkey.0), "1dc638338aa8dff2fd75df809e9f335d1b979690e7e02f498f10bb7d2c4a50eb08251a23ad51acbc01e346941a724e4795c113481b5a81a6f526db3df4d2000b");
+    }
+
+    #[test]
+    fn g1_aggregate() {
+        let privkey_1 = PrivKey([0x21, 0x6f, 0x05, 0xb4, 0x64, 0xd2, 0xca, 0xb2, 0x72, 0x95, 0x4c, 0x66, 0x0d, 0xd4, 0x5c, 0xf8, 0xab, 0x0b, 0x26, 0x13, 0x65, 0x4d, 0xcc, 0xc7, 0x4c, 0x11, 0x55, 0xfe, 0xba, 0xaf, 0xb5, 0xc9]);
+
+        let privkey_2 = PrivKey([0x22, 0x6f, 0x05, 0xb4, 0x64, 0xd2, 0xca, 0xb2, 0x72, 0x95, 0x4c, 0x66, 0x0d, 0xd4, 0x5c, 0xf8, 0xab, 0x0b, 0x26, 0x13, 0x65, 0x4d, 0xcc, 0xc7, 0x4c, 0x11, 0x55, 0xfe, 0xba, 0xaf, 0xb5, 0xc9]);
+
+        let sig_1 = privkey_1.sign::<Sha256Normalized, &str>("test").unwrap();
+
+        let sig_2 = privkey_2.sign::<Sha256Normalized, &str>("test").unwrap();
+        
+        let pubkey_1 = G2Point::try_from(privkey_1).unwrap();
+
+        let pubkey_2 = G2Point::try_from(privkey_2).unwrap();
+
+        let sig_agg = sig_1 + sig_2;
+
+        let pubkey_agg = pubkey_1 + pubkey_2;
+
+        pubkey_agg.verify_signature::<Sha256Normalized, &str>(sig_agg.try_into().unwrap(), "test").unwrap(); 
     }
 }
