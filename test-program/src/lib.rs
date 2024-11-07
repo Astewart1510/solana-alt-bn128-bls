@@ -1,37 +1,38 @@
-use solana_bls_alt_bn128::{G1CompressedPoint, G2CompressedPoint, G2Point, Sha256Normalized};
+use solana_bls_alt_bn128::{G1CompressedPoint, G2CompressedPoint, Sha256Normalized};
+use pinocchio::{account_info::AccountInfo, entrypoint, program_error::ProgramError, pubkey::Pubkey, ProgramResult};
 
-pub const pubkey: G2CompressedPoint = G2CompressedPoint([
-    0x8b, 0x1a, 0xc6, 0x3e, 0x24, 0x4f, 0xa4, 0x19, 0x78, 0xf2, 0x84, 0xb4, 0x69, 0xa6, 0xcb,
-    0xe4, 0xa8, 0xba, 0xeb, 0x71, 0x06, 0x30, 0xad, 0xcc, 0xf6, 0x9b, 0x27, 0xd4, 0xbd, 0x12,
-    0xf5, 0x76, 0x1e, 0x88, 0xed, 0x4a, 0xeb, 0xd8, 0x43, 0x85, 0x3b, 0xf0, 0x24, 0x9c, 0x7c,
-    0x2b, 0x37, 0xfb, 0xb0, 0xd1, 0x77, 0xdb, 0x37, 0xe6, 0xab, 0x29, 0xd8, 0x9d, 0x4e, 0x29,
-    0x72, 0xdf, 0xff, 0x24,
+pub const PUBKEY: G2CompressedPoint = G2CompressedPoint([
+    0x26, 0xe7, 0x58, 0x78, 0x4a, 0x55, 0x3f, 0xe9, 0xe9, 0x09, 0x2c, 0xdd, 0x05, 0xea, 0xa3, 0xb9,
+    0x2c, 0xb5, 0xd9, 0x30, 0xa1, 0xd4, 0x8b, 0xde, 0xb9, 0xbe, 0x8f, 0x0f, 0x6f, 0x09, 0xc9, 0xda,
+    0x08, 0x20, 0xd2, 0x42, 0xbc, 0x90, 0x71, 0xa8, 0x49, 0x8b, 0x46, 0x87, 0xa2, 0x51, 0x9f, 0xb0,
+    0x22, 0xb2, 0xec, 0xb4, 0xcb, 0x99, 0x34, 0xdb, 0x57, 0xc1, 0xc0, 0x03, 0xda, 0x3c, 0x1f, 0x83,
 ]);
 
-/// # Safety
-///
-/// Solana is very dangerous
-#[no_mangle]
-pub unsafe extern "C" fn entrypoint(_: *mut u8) -> u64 {
-    let signature = G1CompressedPoint([
-        0x82, 0x6e, 0x58, 0x71, 0x6e, 0xd0, 0x10, 0x01, 0x81, 0x14, 0x8b, 0x56, 0x47, 0xe8, 0xf0,
-        0x79, 0x99, 0xa3, 0x63, 0x99, 0x11, 0x70, 0x95, 0x9e, 0x71, 0x82, 0x80, 0x14, 0x48, 0x5a,
-        0xa4, 0x2c,
-    ]);
+entrypoint!(process_instruction);
 
-    if pubkey.verify_signature::<Sha256Normalized, &str>(signature, "sample").is_ok() {
-        0
-    } else {
-        1
-    }
+fn process_instruction(
+    _program_id: &Pubkey,      // Public key of the account the program was loaded into
+    _accounts: &[AccountInfo], // All accounts required to process the instruction
+    instruction_data: &[u8],  // Serialized instruction-specific data
+) -> ProgramResult {
+    let (signature_bytes, message) = instruction_data.split_at(32);
+
+    let signature = G1CompressedPoint(signature_bytes.try_into().unwrap());
+
+    PUBKEY
+        .verify_signature::<Sha256Normalized, &[u8]>(signature, &message).map_err(|_| ProgramError::MissingRequiredSignature)?;
+    Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use mollusk_svm::Mollusk;
-    use solana_sdk::{account::AccountSharedData, instruction::{AccountMeta, Instruction}};
-    use solana_sdk::pubkey::Pubkey;
     use solana_sdk::pubkey;
+    use solana_sdk::pubkey::Pubkey;
+    use solana_sdk::{
+        account::AccountSharedData,
+        instruction::{AccountMeta, Instruction},
+    };
 
     #[test]
     fn test() {
@@ -39,21 +40,25 @@ mod tests {
 
         let signer = Pubkey::new_unique();
 
-        let instruction = Instruction::new_with_bytes(
-            program_id,
-            &[],
-            vec![
-                AccountMeta::new(signer, true),
+        let instruction_data: Vec<u8> = [
+            &[
+                0x2b, 0x04, 0x16, 0xb5, 0xd0, 0x58, 0xe8, 0xb3, 0x13, 0x42, 0x4d, 0x3e, 0x71, 0xec, 0x61,
+                0xa3, 0x62, 0x42, 0xdb, 0xa0, 0x31, 0xc3, 0x53, 0xd9, 0xa0, 0x21, 0xbe, 0x4f, 0x5a, 0xed,
+                0x22, 0x7a,
             ],
-        );
+            &50_000u64.to_le_bytes()[..], 
+            b"BTCUSD<"
+        ].concat();
+
+
+        let instruction =
+            Instruction::new_with_bytes(program_id, &instruction_data, vec![AccountMeta::new(signer, true)]);
 
         let mollusk = Mollusk::new(&program_id, "target/deploy/solana_bls_alt_bn128_test");
 
         let _: mollusk_svm::result::InstructionResult = mollusk.process_instruction(
             &instruction,
-            &[
-                (signer, AccountSharedData::new(10000, 0, &Pubkey::default())),
-            ],
+            &[(signer, AccountSharedData::new(10000, 0, &Pubkey::default()))],
         );
     }
 }

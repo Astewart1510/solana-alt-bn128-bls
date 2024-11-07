@@ -8,7 +8,7 @@ crate-type = ["cdylib", "lib"]
 
 [dependencies]
 solana-bls-alt-bn128 = { path = "../" }
-solana-program = "2.1.0"
+pinocchio = "0.6.0"
 
 [dev-dependencies]
 mollusk-svm = "0.0.8"
