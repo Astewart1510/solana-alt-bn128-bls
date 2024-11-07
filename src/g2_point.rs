@@ -3,12 +3,49 @@ pub struct G2Point(pub [u8;128]);
 #[derive(Clone)]
 pub struct G2CompressedPoint(pub [u8;64]);
 
+#[cfg(not(target_os = "solana"))]
 use ark_bn254::{Fr, G2Affine};
+#[cfg(not(target_os = "solana"))]
 use ark_ec::AffineRepr;
+#[cfg(not(target_os = "solana"))]
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use solana_bn254::{compression::prelude::{alt_bn128_g2_compress, alt_bn128_g2_decompress}, prelude::alt_bn128_pairing};
 
-use crate::{constants::G2_MINUS_ONE, errors::BLSError, g1_point::{G1CompressedPoint, G1Point}, privkey::PrivKey, schemes::HashToCurve};
+use crate::{G2_MINUS_ONE, BLSError, G1CompressedPoint, G1Point, HashToCurve};
+
+#[cfg(not(target_os="solana"))]
+use crate::PrivKey;
+
+impl G2Point {
+    pub fn verify_signature<H: HashToCurve, T: AsRef<[u8]>>(self, signature: G1CompressedPoint, message: T) -> Result<(), BLSError> {
+        let mut input = [0u8;384];
+
+        // 1) Hash message to curve
+        input[..64].clone_from_slice(&H::try_hash_to_curve(message)?.0);
+        // 2) Decompress our public key
+        input[64..192].clone_from_slice(&self.0);
+        // 3) Decompress our signature
+        input[192..256].clone_from_slice(&G1Point::try_from(signature)?.0);
+        // 4) Pair with -G2::one()
+        input[256..].clone_from_slice(&G2_MINUS_ONE);
+
+        // Calculate result
+        if let Ok(r) = alt_bn128_pairing(&input) {
+            if r.eq(&[
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
+            ]) {
+                Ok(())
+            } else {
+                Err(BLSError::BLSVerificationError)
+            }
+        } else {
+            Err(BLSError::AltBN128PairingError)
+        }
+    }
+}
 
 impl G2CompressedPoint {
     pub fn verify_signature<H: HashToCurve, T: AsRef<[u8]>>(self, signature: G1CompressedPoint, message: T) -> Result<(), BLSError> {
@@ -41,6 +78,7 @@ impl G2CompressedPoint {
     }
 }
 
+#[cfg(not(target_os="solana"))]
 impl TryFrom<PrivKey> for G2CompressedPoint {
     type Error = BLSError;
 
@@ -63,6 +101,7 @@ impl TryFrom<PrivKey> for G2CompressedPoint {
     }
 }
 
+#[cfg(not(target_os="solana"))]
 impl TryFrom<PrivKey> for G2Point {
     type Error = BLSError;
 

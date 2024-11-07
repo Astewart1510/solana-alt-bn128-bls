@@ -1,0 +1,15 @@
+[package]
+name = "solana-bls-alt-bn128-test"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+solana-bls-alt-bn128 = { path = "../" }
+solana-program = "2.1.0"
+
+[dev-dependencies]
+mollusk-svm = "0.0.8"
+solana-sdk = "2.1.0"

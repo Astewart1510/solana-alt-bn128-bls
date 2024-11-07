@@ -1,6 +1,6 @@
 use solana_bn254::{compression::prelude::{alt_bn128_g1_compress, alt_bn128_g1_decompress}, prelude::alt_bn128_multiplication};
 
-use crate::{errors::BLSError, privkey::PrivKey};
+use crate::{BLSError,PrivKey};
 
 #[derive(Clone)]
 pub struct G1Point(pub [u8;64]);
