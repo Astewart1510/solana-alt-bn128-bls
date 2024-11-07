@@ -124,23 +124,28 @@ mod tests {
     }
 
     #[test]
-    fn g1_aggregate() {
+    fn perps_aggregation() {
+        let ticker = b"BTC";
+        let msg = [
+            &50_000u64.to_le_bytes()[..],
+            b"BTCUSD<",
+        ].concat();
         let privkey_1 = PrivKey([0x21, 0x6f, 0x05, 0xb4, 0x64, 0xd2, 0xca, 0xb2, 0x72, 0x95, 0x4c, 0x66, 0x0d, 0xd4, 0x5c, 0xf8, 0xab, 0x0b, 0x26, 0x13, 0x65, 0x4d, 0xcc, 0xc7, 0x4c, 0x11, 0x55, 0xfe, 0xba, 0xaf, 0xb5, 0xc9]);
-
         let privkey_2 = PrivKey([0x22, 0x6f, 0x05, 0xb4, 0x64, 0xd2, 0xca, 0xb2, 0x72, 0x95, 0x4c, 0x66, 0x0d, 0xd4, 0x5c, 0xf8, 0xab, 0x0b, 0x26, 0x13, 0x65, 0x4d, 0xcc, 0xc7, 0x4c, 0x11, 0x55, 0xfe, 0xba, 0xaf, 0xb5, 0xc9]);
+        let privkey_3 = PrivKey([0x23, 0x6f, 0x05, 0xb4, 0x64, 0xd2, 0xca, 0xb2, 0x72, 0x95, 0x4c, 0x66, 0x0d, 0xd4, 0x5c, 0xf8, 0xab, 0x0b, 0x26, 0x13, 0x65, 0x4d, 0xcc, 0xc7, 0x4c, 0x11, 0x55, 0xfe, 0xba, 0xaf, 0xb5, 0xc9]);
 
-        let sig_1 = privkey_1.sign::<Sha256Normalized, &str>("test").unwrap();
+        let sig_1 = privkey_1.sign::<Sha256Normalized, &[u8]>(&msg).unwrap();
+        let sig_2 = privkey_2.sign::<Sha256Normalized, &[u8]>(&msg).unwrap();
+        let sig_3 = privkey_3.sign::<Sha256Normalized, &[u8]>(&msg).unwrap();
 
-        let sig_2 = privkey_2.sign::<Sha256Normalized, &str>("test").unwrap();
-        
         let pubkey_1 = G2Point::try_from(privkey_1).unwrap();
-
         let pubkey_2 = G2Point::try_from(privkey_2).unwrap();
+        let pubkey_3 = G2Point::try_from(privkey_3).unwrap();
 
-        let sig_agg = sig_1 + sig_2;
+        let sig_agg = sig_1 + sig_2 + sig_3;
 
-        let pubkey_agg = pubkey_1 + pubkey_2;
+        let pubkey_agg = pubkey_1 + pubkey_2 + pubkey_3;
 
-        pubkey_agg.verify_signature::<Sha256Normalized, &str>(sig_agg.try_into().unwrap(), "test").unwrap(); 
+        pubkey_agg.verify_signature::<Sha256Normalized, &[u8]>(sig_agg.try_into().unwrap(), &msg).unwrap(); 
     }
 }
