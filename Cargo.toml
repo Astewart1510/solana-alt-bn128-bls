@@ -1,7 +1,9 @@
 [package]
 name = "solana-alt-bn128-bls"
+authors = ["Dean Little <@deanmlittle>"]
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
 
 [lib]
 crate-type = ["cdylib", "lib"]
