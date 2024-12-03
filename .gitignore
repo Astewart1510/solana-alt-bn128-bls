@@ -1,3 +1,4 @@
 /target
 test-program/target
 Cargo.lock
+.vscode
