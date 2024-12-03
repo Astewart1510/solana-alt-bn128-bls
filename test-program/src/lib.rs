@@ -1,4 +1,4 @@
-use solana_bls_alt_bn128::{G1CompressedPoint, G2CompressedPoint, Sha256Normalized};
+use solana_alt_bn128_bls::{G1CompressedPoint, G2CompressedPoint, Sha256Normalized};
 use pinocchio::{account_info::AccountInfo, entrypoint, program_error::ProgramError, pubkey::Pubkey, ProgramResult};
 
 pub const PUBKEY: G2CompressedPoint = G2CompressedPoint([
@@ -8,11 +8,14 @@ pub const PUBKEY: G2CompressedPoint = G2CompressedPoint([
     0x22, 0xb2, 0xec, 0xb4, 0xcb, 0x99, 0x34, 0xdb, 0x57, 0xc1, 0xc0, 0x03, 0xda, 0x3c, 0x1f, 0x83,
 ]);
 
+#[no_mangle]
+pub static IDL: &str = "https://github.com/org/repo/idl.json";
+
 entrypoint!(process_instruction);
 
 fn process_instruction(
-    _program_id: &Pubkey,      // Public key of the account the program was loaded into
-    _accounts: &[AccountInfo], // All accounts required to process the instruction
+    _program_id: &Pubkey,
+    _accounts: &[AccountInfo],
     instruction_data: &[u8],  // Serialized instruction-specific data
 ) -> ProgramResult {
     let (signature_bytes, message) = instruction_data.split_at(32);
@@ -20,7 +23,7 @@ fn process_instruction(
     let signature = G1CompressedPoint(signature_bytes.try_into().unwrap());
 
     PUBKEY
-        .verify_signature::<Sha256Normalized, &[u8]>(signature, &message).map_err(|_| ProgramError::MissingRequiredSignature)?;
+        .verify_signature::<Sha256Normalized, &[u8], G1CompressedPoint>(signature, &message).map_err(|_| ProgramError::MissingRequiredSignature)?;
     Ok(())
 }
 
@@ -36,7 +39,7 @@ mod tests {
 
     #[test]
     fn test() {
-        let program_id = pubkey!("BL511111111111111111111111111111111111111111");
+        let program_id = pubkey!("B1sA1tBn128111111111111111111111111111111111");
 
         let signer = Pubkey::new_unique();
 

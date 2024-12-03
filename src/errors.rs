@@ -7,6 +7,7 @@ pub enum BLSError {
     HashToCurveError,
     BLSSigningError,
     BLSVerificationError,
+    SerializationError,
     G1PointCompressionError,
     G1PointDecompressionError,
     G2PointCompressionError,

@@ -13,3 +13,8 @@ pub trait HashToCurve {
     /// - Domain separation
     fn try_hash_to_curve<T: AsRef<[u8]>>(message: T) -> Result<G1Point, BLSError>;
 }
+
+// Trait to represent any type that can be used as a BLS signature
+pub trait BLSSignature {
+    fn to_bytes(&self) -> Result<[u8; 64], BLSError>;
+}

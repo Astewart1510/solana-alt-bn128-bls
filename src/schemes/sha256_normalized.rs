@@ -22,7 +22,7 @@ pub struct Sha256Normalized;
 
 impl HashToCurve for Sha256Normalized {
     fn try_hash_to_curve<T: AsRef<[u8]>>(message: T) -> Result<G1Point, BLSError> {
-        Ok((0..255)
+        (0..255)
             .find_map(|n: u8| {
                 // Create a hash
                 let hash = solana_nostd_sha256::hashv(&[message.as_ref(), &[n]]);
@@ -43,6 +43,6 @@ impl HashToCurve for Sha256Normalized {
                     Err(_) => None,
                 }
             })
-            .ok_or(BLSError::HashToCurveError)?)
+            .ok_or(BLSError::HashToCurveError)
     }
 }
