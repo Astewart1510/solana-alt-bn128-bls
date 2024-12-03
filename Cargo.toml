@@ -2,6 +2,7 @@
 name = "solana-alt-bn128-bls"
 authors = ["Dean Little <@deanmlittle>"]
 version = "0.1.0"
+description = "BLS signatures over the Alt-BN128 curve for Solana"
 edition = "2021"
 license = "MIT"
 
