@@ -3,13 +3,9 @@ pub struct G2Point(pub [u8; 128]);
 #[derive(Clone)]
 pub struct G2CompressedPoint(pub [u8; 64]);
 
-#[cfg(not(target_os="solana"))]
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-#[cfg(not(target_os="solana"))]
 use num::CheckedAdd;
-#[cfg(not(target_os="solana"))]
 use ark_bn254::Fr;
-#[cfg(not(target_os="solana"))]
 use ark_ec::AffineRepr;
 
 use solana_bn254::{
