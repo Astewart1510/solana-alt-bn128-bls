@@ -53,7 +53,7 @@ impl G2Point {
     }
 }
 
-#[cfg(not(target_os = "solana"))]
+
 impl core::ops::Add for G2Point {
     type Output = G2Point;
 
@@ -62,7 +62,6 @@ impl core::ops::Add for G2Point {
     }
 }
 
-#[cfg(not(target_os = "solana"))]
 impl CheckedAdd for G2Point {
     fn checked_add(&self, rhs: &Self) -> Option<Self> {
         let result = (|| -> Result<Self, BLSError> {
@@ -126,7 +125,7 @@ impl G2CompressedPoint {
     }
 }
 
-#[cfg(not(target_os = "solana"))]
+
 impl TryFrom<&crate::PrivKey> for G2CompressedPoint {
     type Error = BLSError;
 

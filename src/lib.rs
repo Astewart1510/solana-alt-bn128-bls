@@ -16,5 +16,4 @@ pub use g2_point::*;
 pub mod errors;
 pub use errors::*;
 
-#[cfg(all(test, not(target_os = "solana")))]
 pub mod tests;
