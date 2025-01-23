@@ -147,7 +147,6 @@ impl TryFrom<&crate::PrivKey> for G2CompressedPoint {
     }
 }
 
-#[cfg(not(target_os = "solana"))]
 impl TryFrom<&crate::PrivKey> for G2Point {
     type Error = BLSError;
 
